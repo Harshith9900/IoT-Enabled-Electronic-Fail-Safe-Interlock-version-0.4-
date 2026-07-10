@@ -1,45 +1,61 @@
 #include <RH_ASK.h>
 #include <SPI.h> 
 
-int irHelmetPin = 3;
-int buzzerPin = 12;
-int irHelmetValue = 0;
+// --- UPDATED HARDWARE PINS ---
+const int leftIRPin = 2;    // Left sensor
+const int rightIRPin = 3;   // Right sensor
+const int buzzerPin = 4;    // Active buzzer
+const int rfTxPin = 12;     // RF Transmitter Data Pin
 
-RH_ASK driver(2000, 11, 0, 2);
+// Initialize Radio (Speed: 2000, RX: 11 (Unused), TX: 12, PTT: 0)
+RH_ASK driver(2000, 11, rfTxPin, 0);
 
 void setup() {
-  pinMode(irHelmetPin, INPUT_PULLUP);
+  pinMode(leftIRPin, INPUT);
+  pinMode(rightIRPin, INPUT);
   pinMode(buzzerPin, OUTPUT);
+  
   Serial.begin(9600);
   
   if (!driver.init()) {
-    Serial.println("RF init failed");
+    Serial.println("RF init failed. Check wiring!");
+  } else {
+    Serial.println("Helmet Brain Online. Radio transmitting.");
   }
 }
 
 void loop() {
-  // Read the IR sensor (LOW usually means object detected/helmet on)
-  irHelmetValue = digitalRead(irHelmetPin);
+  // Read both IR sensors (LOW means it detects your head)
+  int leftValue = digitalRead(leftIRPin);
+  int rightValue = digitalRead(rightIRPin);
   
-  Serial.print("Helmet IR: "); 
-  Serial.println(irHelmetValue);
+  Serial.print("Left IR: "); 
+  Serial.print(leftValue);
+  Serial.print(" | Right IR: "); 
+  Serial.println(rightValue);
   
   bool unsafeCondition = false;
   
-  // If no reflection is detected, it's unsafe
-  if (irHelmetValue == HIGH) unsafeCondition = true; 
+  // FAILSAFE: Both sensors must lose contact to trigger the alarm
+  if (leftValue == HIGH && rightValue == HIGH) {
+    unsafeCondition = true; 
+  }
   
-  // Sound the alarm in the helmet if it's off the head
-  digitalWrite(buzzerPin, unsafeCondition ? HIGH : LOW);
+  // Sound the alarm inside the helmet if it's off
+  if (unsafeCondition) {
+    digitalWrite(buzzerPin, HIGH);
+  } else {
+    digitalWrite(buzzerPin, LOW);
+  }
   
   // Create a tiny 2-byte payload: [Status, Null Terminator]
   char msg[2];
   msg[0] = unsafeCondition ? '1' : '0'; 
   msg[1] = '\0';
   
-  // Transmit the status to the bike
+  // Beam the status to the bike
   driver.send((uint8_t *)msg, strlen(msg));
   driver.waitPacketSent();
   
-  delay(500); // Check twice a second
+  delay(500); // Check twice a second to save power
 }
