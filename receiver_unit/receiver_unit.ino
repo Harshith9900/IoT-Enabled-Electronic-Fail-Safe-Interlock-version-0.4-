@@ -24,25 +24,22 @@ void setup() {
 }
 
 void loop() {
-  int signal = digitalRead(rfReceivePin);
+ int signal = digitalRead(rfReceivePin);
 
-  // If the pin drops to LOW, the transmitter is sending the alarm state
-  if (signal == LOW) { 
-     // UNSAFE STATE (Helmet is off)
+  // CHANGING THIS: THE signal is HIGH (idle), it's actually UNSAFE
+  if (signal == HIGH) { 
      lcd.setCursor(0, 0);
      lcd.print("Engine: STOPPED ");
      lcd.setCursor(0, 1);
      lcd.print("Helmet: UNSAFE  ");
-     
-     digitalWrite(buzzerPin, HIGH); // Turns the buzzer ON
+     digitalWrite(buzzerPin, HIGH); // Alarm ON
   } else {
-     // SAFE STATE (Helmet is on)
+     // If signal is LOW (received a transmission), it's SAFE
      lcd.setCursor(0, 0);
      lcd.print("Engine: RUNNING ");
      lcd.setCursor(0, 1);
      lcd.print("Helmet: SAFE    ");
-     
-     digitalWrite(buzzerPin, LOW);  // Turns the buzzer OFF
+     digitalWrite(buzzerPin, LOW);  // Alarm OFF
   }
   
   delay(200); // Small refresh delay
