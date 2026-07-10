@@ -27,19 +27,19 @@ void loop() {
  int signal = digitalRead(rfReceivePin);
 
   // CHANGING THIS: THE signal is HIGH (idle), it's actually UNSAFE
-  if (signal == LOW) { 
+  if (signal == HIGH) { 
      lcd.setCursor(0, 0);
      lcd.print("Engine: STOPPED ");
      lcd.setCursor(0, 1);
      lcd.print("Helmet: UNSAFE  ");
-     digitalWrite(buzzerPin, LOW); // Alarm ON
+     digitalWrite(buzzerPin, HIGH); // Alarm ON
   } else {
      // If signal is LOW (received a transmission), it's SAFE
      lcd.setCursor(0, 0);
      lcd.print("Engine: RUNNING ");
      lcd.setCursor(0, 1);
      lcd.print("Helmet: SAFE    ");
-     digitalWrite(buzzerPin, HIGH);  // Alarm OFF
+     digitalWrite(buzzerPin, LOW);  // Alarm OFF
   }
   
   delay(200); // Small refresh delay
